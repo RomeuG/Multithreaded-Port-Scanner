@@ -17,11 +17,13 @@
 
 int main(int argc, char** argv)
 {
-	if(argc != 3) {
-		exit(EXIT_FAILURE);
-	}
+	/* if(argc != 3) { */
+	/* 	exit(EXIT_FAILURE); */
+	/* } */
 
 	int copts;
+	int sock;
+	int err;
 	int min_port = MIN_PORT;
 	int max_port = MAX_PORT;
 	char hostname[64];
@@ -57,7 +59,22 @@ int main(int argc, char** argv)
 	}
 
 	for(int i = 0; i < 65535; i++) {
+		sa.sin_port = htons(i);
 
+		sock = socket(AF_INET, SOCK_STREAM, 0);
+
+		if(sock < 0) {
+			printf("Error opening socket\n");
+			exit(EXIT_FAILURE);
+		}
+
+		err = connect(sock, (struct sockaddr*)&sa, sizeof(sa));
+
+		if(err >= 0) {
+			printf("%-5d open\n", i);
+		}
+
+		close(sock);
 	}
 
 	return EXIT_SUCCESS;
