@@ -80,12 +80,9 @@ int main(int argc, char** argv)
 	}
 
 	printf("IP: %s\nMin Port: %d\nMax Port: %d\n", hostname, min_port, max_port);
-	printf("127.0.0.1 is ip: %d\n", is_ip_address("127.0.0.1"));
-	printf("127.0..0.1 is ip: %d\n", is_ip_address("127.0..0.1"));
-	printf("127.0.0e.1 is ip: %d\n", is_ip_address("127.0.0e.1"));
 
 	// TODO: create a specific function to check the whole IP address
-	if(isdigit(hostname[0])) {
+	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
 	} else if((host = gethostbyname(hostname))) {
 		strncpy((char*)&sa.sin_addr, (char*)host->h_name, sizeof(sa.sin_addr));
