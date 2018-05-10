@@ -50,10 +50,6 @@ int is_ip_address(char* s)
 
 int main(int argc, char** argv)
 {
-	/* if(argc != 3) { */
-	/* 	exit(EXIT_FAILURE); */
-	/* } */
-
 	int copts;
 	int sock;
 	int err;
