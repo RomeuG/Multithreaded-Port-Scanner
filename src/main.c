@@ -58,7 +58,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	for(int i = 0; i < 65535; i++) {
+	for(int i = min_port; i < max_port; i++) {
 		sa.sin_port = htons(i);
 
 		sock = socket(AF_INET, SOCK_STREAM, 0);
