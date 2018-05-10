@@ -15,6 +15,39 @@
 #define MIN_PORT 1
 #define MAX_PORT 65535
 
+int is_ip_address(char* s)
+{
+	int i = 0;
+	int dot_count = 0;
+
+	while(*s++) {
+		if(i > 4) {
+			return 0;
+		}
+
+		if(*s == '.') {
+			if(++dot_count > 4) {
+				return 0;
+			}
+
+			i = 0;
+			continue;
+		}
+
+		if(strncmp(s, "", 1) == 0) {
+			continue;
+		}
+
+		if(!isdigit(*s)) {
+			return 0;
+		}
+
+		i++;
+	}
+
+	return 1;
+}
+
 int main(int argc, char** argv)
 {
 	/* if(argc != 3) { */
@@ -47,6 +80,9 @@ int main(int argc, char** argv)
 	}
 
 	printf("IP: %s\nMin Port: %d\nMax Port: %d\n", hostname, min_port, max_port);
+	printf("127.0.0.1 is ip: %d\n", is_ip_address("127.0.0.1"));
+	printf("127.0..0.1 is ip: %d\n", is_ip_address("127.0..0.1"));
+	printf("127.0.0e.1 is ip: %d\n", is_ip_address("127.0.0e.1"));
 
 	// TODO: create a specific function to check the whole IP address
 	if(isdigit(hostname[0])) {
