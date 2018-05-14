@@ -11,6 +11,7 @@
 #include <pthread.h>
 
 #include <sys/socket.h>
+#include <sys/sysinfo.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -97,6 +98,7 @@ int main(int argc, char** argv)
 {
 	int copts;
 	int t_error;
+	int total_cpus;
 	int total_ports;
 
 	int t1_min_port;
@@ -131,6 +133,8 @@ int main(int argc, char** argv)
 	}
 
 	printf("IP: %s\nMin Port: %d\nMax Port: %d\n", hostname, min_port, max_port);
+
+	total_cpus = get_nprocs();
 
 	total_ports = max_port - min_port;
 
