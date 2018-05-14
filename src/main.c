@@ -23,6 +23,7 @@ int min_port = MIN_PORT;
 int max_port = MAX_PORT;
 
 struct sockaddr_in sa;
+pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
 	int min_port;
@@ -67,6 +68,8 @@ void *port_scanning_thread(void *ptr)
 	thread_info_t *info = (thread_info_t*)ptr;
 
 	for(int i = info->min_port; i < info->max_port; i++) {
+		pthread_mutex_lock(&_mutex);
+
 		sa.sin_port = htons(i);
 
 		sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -82,9 +85,9 @@ void *port_scanning_thread(void *ptr)
 			printf("%-5d open\n", i);
 		}
 
+		pthread_mutex_unlock(&_mutex);
 		close(sock);
 		printf("Finished testing: %d\n", i);
-		sleep(1);
 	}
 
 	return NULL;
