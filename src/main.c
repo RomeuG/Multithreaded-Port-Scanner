@@ -12,6 +12,7 @@
 
 #include <sys/socket.h>
 #include <sys/sysinfo.h>
+#include <sys/syscall.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
@@ -67,11 +68,14 @@ int is_ip_address(char* s)
 void *port_scanning_thread(void *ptr)
 {
 	thread_info_t *info = (thread_info_t*)ptr;
+	pid_t t_id = syscall(__NR_gettid);
+
+	printf("Thread %d - Min_Port: %d - Max_Port: %d\n", t_id, info->min_port, info->max_port);
 
 	for(int i = info->min_port; i < info->max_port; i++) {
 		pthread_mutex_lock(&_mutex);
-
 		sa.sin_port = htons(i);
+		pthread_mutex_unlock(&_mutex);
 
 		sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -86,7 +90,6 @@ void *port_scanning_thread(void *ptr)
 			printf("%-5d open\n", i);
 		}
 
-		pthread_mutex_unlock(&_mutex);
 		close(sock);
 		printf("Finished testing: %d\n", i);
 	}
@@ -101,18 +104,10 @@ int main(int argc, char** argv)
 	int total_cpus;
 	int total_ports;
 
-	int t1_min_port;
-	int t1_max_port;
-	int t2_min_port;
-	int t2_max_port;
-
 	char hostname[64];
 
-	pthread_t t1;
-	pthread_t t2;
-
-	thread_info_t t_info1;
-	thread_info_t t_info2;
+	pthread_t *threads;
+	thread_info_t *t_info;
 
 	struct hostent *host;
 
@@ -134,24 +129,9 @@ int main(int argc, char** argv)
 
 	printf("IP: %s\nMin Port: %d\nMax Port: %d\n", hostname, min_port, max_port);
 
-	total_cpus = get_nprocs();
+	//total_cpus = get_nprocs();
+	total_cpus = 2;
 
-	total_ports = max_port - min_port;
-
-	t1_min_port = min_port;
-	t1_max_port = max_port / 2;
-	t2_min_port = (max_port / 2) + 1;
-	t2_max_port = max_port;
-
-	printf("t1_min_port=%d\nt1_max_port=%d\nt2_min_port=%d\nt2_max_port=%d\n",
-		   t1_min_port, t1_max_port, t2_min_port, t2_max_port);
-
-	t_info1.min_port = t1_min_port;
-	t_info1.max_port = t1_max_port;
-	t_info2.min_port = t2_min_port;
-	t_info2.max_port = t2_max_port;
-
-// TODO: create a specific function to check the whole IP address
 	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
 	} else if((host = gethostbyname(hostname))) {
@@ -161,18 +141,22 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	if((t_error = pthread_create(&t1, NULL, &port_scanning_thread, &t_info1))) {
-		printf("Starting thread failed: %d\n", t_error);
-		exit(EXIT_FAILURE);
+	threads = malloc(sizeof(pthread_t) * total_cpus);
+	t_info = malloc(sizeof(thread_info_t) * total_cpus);
+
+	for(int i = 0; i < total_cpus; i++) {
+		t_info[i].min_port = (i == 0) ? min_port : max_port / 2;
+		t_info[i].max_port = (i == 0) ? max_port / 2 : max_port;
+
+		if((t_error = pthread_create(&threads[i], NULL, &port_scanning_thread, &t_info[i])) != 0) {
+			printf("Starting thread failed: %d\n", t_error);
+			exit(EXIT_FAILURE);
+		}
 	}
 
-	if((t_error = pthread_create(&t2, NULL, &port_scanning_thread, &t_info2))) {
-		printf("Starting thread failed: %d\n", t_error);
-		exit(EXIT_FAILURE);
+	for(int i = 0; i < total_cpus; i++) {
+		pthread_join(threads[i], NULL);
 	}
-
-	pthread_join(t1, NULL);
-	pthread_join(t2, NULL);
 
 	return EXIT_SUCCESS;
 }
