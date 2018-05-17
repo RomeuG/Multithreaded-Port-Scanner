@@ -16,6 +16,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#define PRINT_DEC_I32(var) printf("%s=%d\n", #var, var);
+#define PRINT_DEC_STR(var) printf("%s=%s\n", #var, var);
+
 #define MIN_PORT 1
 #define MAX_PORT 65535
 
@@ -70,7 +73,9 @@ void *port_scanning_thread(void *ptr)
 	thread_info_t *info = (thread_info_t*)ptr;
 	pid_t t_id = syscall(__NR_gettid);
 
-	printf("Thread %d - Min_Port: %d - Max_Port: %d\n", t_id, info->min_port, info->max_port);
+	PRINT_DEC_I32(t_id);
+	PRINT_DEC_I32(info->min_port);
+	PRINT_DEC_I32(info->max_port);
 
 	for(int i = info->min_port; i < info->max_port; i++) {
 		pthread_mutex_lock(&_mutex);
@@ -127,10 +132,12 @@ int main(int argc, char** argv)
 		}
 	}
 
-	printf("IP: %s\nMin Port: %d\nMax Port: %d\n", hostname, min_port, max_port);
+	PRINT_DEC_STR(hostname);
+	PRINT_DEC_I32(min_port);
+	PRINT_DEC_I32(max_port);
 
 	//total_cpus = get_nprocs();
-	total_cpus = 2;
+	total_cpus = 4;
 
 	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
@@ -144,9 +151,14 @@ int main(int argc, char** argv)
 	threads = malloc(sizeof(pthread_t) * total_cpus);
 	t_info = malloc(sizeof(thread_info_t) * total_cpus);
 
+	total_ports = max_port - min_port;
+	int equal_parts = total_ports / total_cpus;
+
+	printf("Total ports: %d\nEqual parts: %d\n", total_ports, equal_parts);
+
 	for(int i = 0; i < total_cpus; i++) {
-		t_info[i].min_port = (i == 0) ? min_port : max_port / 2;
-		t_info[i].max_port = (i == 0) ? max_port / 2 : max_port;
+		t_info[i].min_port = (i == 0) ? min_port : equal_parts * i;
+		t_info[i].max_port = (i == 0) ? equal_parts * (i + 1) : (i + 1 == total_cpus) ? equal_parts * total_cpus : equal_parts * (i + 2);
 
 		if((t_error = pthread_create(&threads[i], NULL, &port_scanning_thread, &t_info[i])) != 0) {
 			printf("Starting thread failed: %d\n", t_error);
