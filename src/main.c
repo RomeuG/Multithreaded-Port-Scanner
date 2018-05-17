@@ -154,7 +154,8 @@ int main(int argc, char** argv)
 	total_ports = max_port - min_port;
 	int equal_parts = total_ports / total_cpus;
 
-	printf("Total ports: %d\nEqual parts: %d\n", total_ports, equal_parts);
+	PRINT_DEC_I32(total_ports);
+	PRINT_DEC_I32(equal_parts);
 
 	for(int i = 0; i < total_cpus; i++) {
 		t_info[i].min_port = (i == 0) ? min_port : equal_parts * i;
