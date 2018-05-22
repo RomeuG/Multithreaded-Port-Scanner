@@ -134,7 +134,7 @@ int main(int argc, char** argv)
 	PRINT_DEC_I32(max_port);
 
 	//total_cpus = get_nprocs();
-	total_cpus = 3;
+	total_cpus = 6;
 
 	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
@@ -155,8 +155,8 @@ int main(int argc, char** argv)
 	PRINT_DEC_I32(equal_parts);
 
 	for(int i = 0; i < total_cpus; i++) {
-		t_info[i].min_port = (i == 0) ? min_port : equal_parts * i;
-		t_info[i].max_port = (i == 0) ? equal_parts : (i + 1 == total_cpus) ? equal_parts * total_cpus : equal_parts * (i + 1);
+		t_info[i].min_port = (i == 0) ? min_port : (equal_parts * i) + 1;
+		t_info[i].max_port = (i == 0) ? equal_parts : (i + 1 == total_cpus) ? (equal_parts * total_cpus) + (max_port - (equal_parts * total_cpus)) : equal_parts * (i + 1);
 
 		PRINT_DEC_I32(t_info[i].min_port);
 		PRINT_DEC_I32(t_info[i].max_port); putchar('\n');
