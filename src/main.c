@@ -73,10 +73,6 @@ void *port_scanning_thread(void *ptr)
 	thread_info_t *info = (thread_info_t*)ptr;
 	pid_t t_id = syscall(__NR_gettid);
 
-	PRINT_DEC_I32(t_id);
-	PRINT_DEC_I32(info->min_port);
-	PRINT_DEC_I32(info->max_port);
-
 	for(int i = info->min_port; i < info->max_port; i++) {
 		pthread_mutex_lock(&_mutex);
 		sa.sin_port = htons(i);
@@ -108,6 +104,7 @@ int main(int argc, char** argv)
 	int t_error;
 	int total_cpus;
 	int total_ports;
+	int equal_parts;
 
 	char hostname[64];
 
@@ -137,7 +134,7 @@ int main(int argc, char** argv)
 	PRINT_DEC_I32(max_port);
 
 	//total_cpus = get_nprocs();
-	total_cpus = 4;
+	total_cpus = 3;
 
 	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
@@ -152,14 +149,17 @@ int main(int argc, char** argv)
 	t_info = malloc(sizeof(thread_info_t) * total_cpus);
 
 	total_ports = max_port - min_port;
-	int equal_parts = total_ports / total_cpus;
+	equal_parts = total_ports / total_cpus;
 
 	PRINT_DEC_I32(total_ports);
 	PRINT_DEC_I32(equal_parts);
 
 	for(int i = 0; i < total_cpus; i++) {
 		t_info[i].min_port = (i == 0) ? min_port : equal_parts * i;
-		t_info[i].max_port = (i == 0) ? equal_parts * (i + 1) : (i + 1 == total_cpus) ? equal_parts * total_cpus : equal_parts * (i + 2);
+		t_info[i].max_port = (i == 0) ? equal_parts : (i + 1 == total_cpus) ? equal_parts * total_cpus : equal_parts * (i + 1);
+
+		PRINT_DEC_I32(t_info[i].min_port);
+		PRINT_DEC_I32(t_info[i].max_port); putchar('\n');
 
 		if((t_error = pthread_create(&threads[i], NULL, &port_scanning_thread, &t_info[i])) != 0) {
 			printf("Starting thread failed: %d\n", t_error);
