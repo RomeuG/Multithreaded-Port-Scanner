@@ -29,6 +29,7 @@ int min_port = MIN_PORT;
 int max_port = MAX_PORT;
 
 bool save = false;
+bool verbose = false;
 FILE* f;
 
 struct sockaddr_in sa;
@@ -100,7 +101,9 @@ void *port_scanning_thread(void *ptr)
 		}
 
 		close(sock);
-		printf("Finished testing: %d\n", i);
+		if(verbose) {
+			printf("Finished testing: %d\n", i);
+		}
 	}
 
 	return NULL;
@@ -123,7 +126,7 @@ int main(int argc, char** argv)
 
 	sa.sin_family = AF_INET;
 
-	while((copts = getopt(argc, argv, "l:h:i:f:")) != -1) {
+	while((copts = getopt(argc, argv, "l:h:i:f:v")) != -1) {
 		switch(copts) {
 		case 'l':
 			min_port = atoi(optarg);
@@ -137,12 +140,17 @@ int main(int argc, char** argv)
 		case 'f':
 			save = true;
 			break;
+		case 'v':
+			verbose = true;
+			break;
 		}
 	}
 
-	PRINT_DEC_STR(hostname);
-	PRINT_DEC_I32(min_port);
-	PRINT_DEC_I32(max_port);
+	if(verbose) {
+		PRINT_DEC_STR(hostname);
+		PRINT_DEC_I32(min_port);
+		PRINT_DEC_I32(max_port);
+	}
 
 	//total_cpus = get_nprocs();
 	total_cpus = 6;
@@ -166,15 +174,19 @@ int main(int argc, char** argv)
 	total_ports = max_port - min_port;
 	equal_parts = total_ports / total_cpus;
 
-	PRINT_DEC_I32(total_ports);
-	PRINT_DEC_I32(equal_parts);
+	if(verbose) {
+		PRINT_DEC_I32(total_ports);
+		PRINT_DEC_I32(equal_parts);
+	}
 
 	for(int i = 0; i < total_cpus; i++) {
 		t_info[i].min_port = (i == 0) ? min_port : (equal_parts * i) + 1;
 		t_info[i].max_port = (i == 0) ? equal_parts : (i + 1 == total_cpus) ? (equal_parts * total_cpus) + (max_port - (equal_parts * total_cpus)) : equal_parts * (i + 1);
 
-		PRINT_DEC_I32(t_info[i].min_port);
-		PRINT_DEC_I32(t_info[i].max_port); putchar('\n');
+		if(verbose) {
+			PRINT_DEC_I32(t_info[i].min_port);
+			PRINT_DEC_I32(t_info[i].max_port); putchar('\n');
+		}
 
 		if((t_error = pthread_create(&threads[i], NULL, &port_scanning_thread, &t_info[i])) != 0) {
 			printf("Starting thread failed: %d\n", t_error);
