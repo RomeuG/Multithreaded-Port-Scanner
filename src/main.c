@@ -93,7 +93,7 @@ void *port_scanning_thread(void *ptr)
 
 		if(err >= 0) {
 			if(save) {
-				fprintf(f, "%-5d open!\n", i);
+				fprintf(f, "%d open!\n", i);
 			}
 
 			printf("%-5d open\n", i);
@@ -185,6 +185,10 @@ int main(int argc, char** argv)
 	for(int i = 0; i < total_cpus; i++) {
 		pthread_join(threads[i], NULL);
 	}
+
+	fclose(f);
+	free(t_info);
+	free(threads);
 
 	return EXIT_SUCCESS;
 }
