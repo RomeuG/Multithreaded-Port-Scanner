@@ -7,7 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
-
+#include <stdbool.h>
 #include <pthread.h>
 
 #include <sys/socket.h>
@@ -21,11 +21,15 @@
 
 #define MIN_PORT 1
 #define MAX_PORT 65535
+#define FILE_NAME "results.txt"
 
 int sock;
 int err;
 int min_port = MIN_PORT;
 int max_port = MAX_PORT;
+
+bool save = false;
+FILE* f;
 
 struct sockaddr_in sa;
 pthread_mutex_t _mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -88,6 +92,10 @@ void *port_scanning_thread(void *ptr)
 		err = connect(sock, (struct sockaddr*)&sa, sizeof(sa));
 
 		if(err >= 0) {
+			if(save) {
+				fprintf(f, "%-5d open!\n", i);
+			}
+
 			printf("%-5d open\n", i);
 		}
 
@@ -115,7 +123,7 @@ int main(int argc, char** argv)
 
 	sa.sin_family = AF_INET;
 
-	while((copts = getopt(argc, argv, "l:h:i:")) != -1) {
+	while((copts = getopt(argc, argv, "l:h:i:f:")) != -1) {
 		switch(copts) {
 		case 'l':
 			min_port = atoi(optarg);
@@ -125,6 +133,9 @@ int main(int argc, char** argv)
 			break;
 		case 'i':
 			strcpy(hostname, optarg);
+			break;
+		case 'f':
+			save = true;
 			break;
 		}
 	}
@@ -143,6 +154,10 @@ int main(int argc, char** argv)
 	} else {
 		herror(hostname);
 		exit(EXIT_FAILURE);
+	}
+
+	if(save) {
+		f = fopen(FILE_NAME, "w");
 	}
 
 	threads = malloc(sizeof(pthread_t) * total_cpus);
