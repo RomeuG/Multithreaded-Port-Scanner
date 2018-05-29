@@ -86,7 +86,7 @@ void *port_scanning_thread(void *ptr)
 		sock = socket(AF_INET, SOCK_STREAM, 0);
 
 		if(sock < 0) {
-			printf("Error opening socket\n");
+			printf("Error opening socket - thread: %d\n", t_id);
 			exit(EXIT_FAILURE);
 		}
 
@@ -125,8 +125,9 @@ int main(int argc, char** argv)
 	struct hostent *host;
 
 	sa.sin_family = AF_INET;
+	total_cpus = get_nprocs();
 
-	while((copts = getopt(argc, argv, "l:h:i:f:v")) != -1) {
+	while((copts = getopt(argc, argv, "l:h:i:f:vt:")) != -1) {
 		switch(copts) {
 		case 'l':
 			min_port = atoi(optarg);
@@ -143,6 +144,18 @@ int main(int argc, char** argv)
 		case 'v':
 			verbose = true;
 			break;
+		case 't':
+		{
+			int arg = atoi(optarg);
+
+			if(arg > total_cpus) {
+				printf("Warning - Thread number too high for the capabilities of your CPU. Using %d threads.\n", total_cpus);
+			} else {
+				total_cpus = arg;
+			}
+
+			break;
+			}
 		}
 	}
 
@@ -151,9 +164,6 @@ int main(int argc, char** argv)
 		PRINT_DEC_I32(min_port);
 		PRINT_DEC_I32(max_port);
 	}
-
-	//total_cpus = get_nprocs();
-	total_cpus = 6;
 
 	if(is_ip_address(hostname)) {
 		sa.sin_addr.s_addr = inet_addr(hostname);
