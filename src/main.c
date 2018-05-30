@@ -148,8 +148,11 @@ int main(int argc, char** argv)
 		{
 			int arg = atoi(optarg);
 
-			if(arg > total_cpus) {
-				printf("Warning - Thread number too high for the capabilities of your CPU. Using %d threads.\n", total_cpus);
+			if(arg > 10) {
+				printf("Warning - Thread number too high. Falling back to 10.\n");
+				break;
+			} else if(arg < 1) {
+				break;
 			} else {
 				total_cpus = arg;
 			}

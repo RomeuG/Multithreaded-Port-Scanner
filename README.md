@@ -14,5 +14,6 @@ Program options:
 -h: maximum port
 -i: IP Address (can be a URL)
 -f: save to file
+-t: number of desireable threads
 -v: verbose mode
 ```
